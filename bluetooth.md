@@ -74,7 +74,7 @@ else {
 // добавляем настройки конфигурации
 l2cap_add_conf_opt(&ptr, L2CAP_CONF_MTU, 2, chan->omtu, endptr - ptr);
 ```
-Выдержка из исходного кода функции *l2cap_parse_conf_req* (*net/bluetooth/l2cap_core.c*)
+Выдержка из исходного кода функции **l2cap_parse_conf_req** (*net/bluetooth/l2cap_core.c*)
 
 Таким образом, если предложенное значение **MTU** нам не подходит, в настройки конфигурации войдет значение по умолчанию (мы предложим свое значение). Таким образом процесс обмена конфигурациями продолжится, пока стороны не придут к взаимовыгодным параметрам соединения.
 
@@ -115,7 +115,7 @@ void *data, u16 *result)
     return ptr - data;
 }
 ```
-Выдержка из исходного кода функции *l2cap_parse_conf_rsp* (*net/bluetooth/l2cap_core.c*)
+Выдержка из исходного кода функции **l2cap_parse_conf_rsp** (*net/bluetooth/l2cap_core.c*)
 
 Функция получает конфигурационный ответ в буфере на который указывает ***rsp*** и в цикле получает по одному каждый конфигурационный параметр, используя **l2cap_get_conf_opt**. Каждый полученный элемент проверяется и записывается обратно через указатель ***ptr*** (поле *data* в структуре *l2cap_conf_req*) в буфер ответа, на который указывает ***data***. Здесь важно заметить, что длина буфера ***data*** в функцию не передается.
 
@@ -137,19 +137,49 @@ switch (result) {
         ...
         goto done;
 ```
-Выдержка из исходного кода функции *l2cap_config_rsp* (*net/bluetooth/l2cap_core.c*)
+Выдержка из исходного кода функции **l2cap_config_rsp** (*net/bluetooth/l2cap_core.c*)
 
-*switch* проверяет значение, которое было было получено из ответа конфигурации, что может управляться атакующим. Далее роль ***data*** будет играть ***char buf[64]***. Данный участок кода исполнится только если устройство будет в состоянии "в ожидании", что может спровоцировано следующим фрагментом кода.
+*switch* проверяет значение, которое было было получено из ответа конфигурации, что может управляться атакующим. Далее роль ***data*** будет играть ***char buf[64]***. Данный участок кода исполнится только если устройство будет в состоянии "в ожидании", что может быть спровоцировано следующим фрагментом кода.
 ```c++
 if (remote_efs) {
     if (chan->local_stype != L2CAP_SERV_NOTRAFIC &&
+        // поле которое используется в дальнейшем
         efs.stype != L2CAP_SERV_NOTRAFIC &&
         efs.stype != chan->local_stype) {
-    ...// We don’t want this branch, easy to avoid
+        ...// эта ветвь не используется
     } else {
-        /* Send PENDING Conf Rsp */
+        // посылаем конфигурационный ответ "в ожидании"
         result = L2CAP_CONF_PENDING;
         set_bit(CONF_LOC_CONF_PEND, &chan->conf_state);
     }
 }
 ```
+Выдержка из исходного кода функции **l2cap_config_rsp** (*net/bluetooth/l2cap_core.c*)
+
+Отсюда следует, что для перехода устройства в состояние "в ожидании" достаточно послать конфигурационный запрос с **EFS** опцией, выставив поле ***stype*** в *L2CAP_SERV_NOTRAFIC*.
+
+После того, как мы достигли состояния жертвы "в ожидании", буфер ***buf[64]*** может быть произвольно перезаписан и передан в функцию **l2cap_parse_conf_rsp**. Эта уязвимость позволяет атакующему совершить переполнение буфера ***buf*** неограниченным количеством данных.
+
+### Как работает переполнение стека
+
+Пусть у нас есть следующий фрагмент кода.
+```c++
+#include <string.h>
+
+int main(int argc, char *argv[]) {
+	char buf[100];
+	strcpy(buf, argv[1]);
+	return 0;
+}
+```
+При передаче в ***argv[1]*** строки, превышающего по длине размер массива ***buf***, произойдет переполнение буфера, как показано на рисунках 2.1.2 и 2.1.3, так как функция **strcpy** не проверяет размер переданной ей строки. 
+![](https://s04vla.storage.yandex.net/rdisk/189f9814f40388fe83efd36d024e9048be3889cf564be8414219087d9bd91d5c/5eb992e1/IkFTLqauHgYU-Cdk6fB83NuXuDR_mUJM1xg80h0saK-eZa2DiUBWdIjtnE4oxYqdEsNlP5S2Y4efLJxj-B_cnw==?uid=1040559485&filename=Stack_Overflow_2.png&disposition=inline&hash=&limit=0&content_type=image%2Fpng&tknv=v2&owner_uid=1040559485&fsize=39254&hid=8d9976c57c7bb5fe0e56348d7382bb67&etag=4ef6720136b3fd87f130320aa644e6c1&media_type=image&rtoken=OjHRDAAvXvx5&force_default=yes&ycrid=na-e6191c72d8c53a41df4c3333c8950799-downloader16f&ts=5a56321627800&s=47b0fb6dcf4cf1b28cdbccac61d09547e1caaca0c0522169bc7c410fa9f6b34a&pb=U2FsdGVkX1-mt9M5mwbLzcu-rKSSgUNQOO3lkVbDSg_ulz4rnnkyYwDxHAevI_GO7NWOunY7oGE80Mhx-Sf-tHymzY66F517Z99kjz3Eue8)
+**Рисунок 2.1.2** до копирования
+![](https://s624sas.storage.yandex.net/rdisk/bd5eb1291454069469f3facbafa7bf9e65599f3f8fdaa63fd3ac3b173cb781ef/5eb9938b/IkFTLqauHgYU-Cdk6fB83DbTa9cOE3YFLBQeo1y50Exj3m2jXN5WAOq1ueHn60STO2uiSDGALMB6_HmX9FkDBw==?uid=1040559485&filename=Stack_Overflow_4.png&disposition=inline&hash=&limit=0&content_type=image%2Fpng&tknv=v2&owner_uid=1040559485&etag=33535dd06eb993dc7de54894d1e1af59&hid=6abb0689bd418d7dedede9d50c7ad4b3&fsize=42327&media_type=image&rtoken=Js8RM83e9xKh&force_default=yes&ycrid=na-a740bd7f601e12046b798ae86c41430c-downloader16f&ts=5a5632b93b8c0&s=a48c70d8f7ff35fc4b140ea968be6258e8ce1d4857347359200505ae53fc1970&pb=U2FsdGVkX1-AWL4uTrCDJAIc-VVNM52WtSmA3CGMN1MKRwg7n6Rz4SEZ1IzaNIyJlcfq9BuoFgzUbNJ5z_u-7tdXRUBapQzUTJ_7XcOWdYI)
+**Рисунок 2.1.2** после копирования
+Так как в архитектуре x86 стек растёт от больших адресов к меньшим, то, записывая данные в буфер, можно осуществить запись за его границами и изменить находящиеся там данные, в частности, изменить адрес возврата.
+Таким образом, атакующая сторона может:
+- перезаписать локальную переменную, находящуюся в памяти рядом с буфером, изменяя поведение программы в свою пользу
+- перезаписать адрес возврата в стековом кадре. Как только функция завершается, управление передаётся по указанному атакующим адресу, обычно в область памяти, к изменению которой он имел доступ
+- перезаписать указатель на функцию или обработчик исключений, которые впоследствии получат управление
+#### Эксплуатация уязвимости CVE-2017-1000251
