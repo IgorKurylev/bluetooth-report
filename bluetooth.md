@@ -9,14 +9,14 @@ TODO: types of vulnerabilities, popular vulnerabilities, impact on android
 
 Как показано на рисунке 1.1 вся структура Bluetooth протоколов является некой альтернативой стека TCP/IP, начиная с физического уровня и заканчивая прикладным, следуя при этом модели OSI.
 
-![](https://s88sas.storage.yandex.net/rdisk/91e7adde4126c91bcac81841a93ce640228d6370aa6f4912925e675e083279e5/5eb84a17/VjhUqhsAETQC8mIPmDmVva-EHqaGqYTZLIiZqGPMbBTu1OXbNhCL8lhGAkqYB8-2rysZQ-1OwEyosfb09U5XYQ==?uid=1040559485&filename=image--015.jpg&disposition=inline&hash=&limit=0&content_type=image%2Fjpeg&tknv=v2&owner_uid=1040559485&etag=890f4d45673b4df6e94ea7e944c6caa0&hid=73980904cc19cd0794eb3ce0599c8b0a&media_type=image&fsize=67402&rtoken=XEck4RTJReva&force_default=yes&ycrid=na-6ae9d863a307be80c70f6a295e18a449-downloader16h&ts=5a54f888573c0&s=3388ba59170a6fa32a2cd5c61efbc66565896f11164e782cf8eb44ba4f3c18a2&pb=U2FsdGVkX19uyND8AKNT19OvG5LC0P1xTDO9eBFP2sfVKr3GKynq7WFq0o-SF_TYr6XAQQ2Txw3vfNWJhg7jhBm0itWiyM8x3fGfve7kZ_Q)
+![](https://s141man.storage.yandex.net/rdisk/f6156f4c8e2f92e69e0f3f40199ae1b7056686ea9386fc0177103a0cd1da8045/5ecb0ed6/VjhUqhsAETQC8mIPmDmVvWi3M0F4HFleJ6fyUNaxALVK4UtjH3erI77BrphChvALB5kOKZjGGn5_T521F89gpw==?uid=1040559485&filename=9-0.jpg&disposition=inline&hash=&limit=0&content_type=image%2Fjpeg&tknv=v2&owner_uid=1040559485&fsize=64601&etag=d785284f121d037b935bf035da42f2df&media_type=image&hid=445c17ac9306e025624840c78b5bc8e7&rtoken=zSK1kzo3CBFu&force_default=yes&ycrid=na-639f4aa3315b4b9d8a95067c339cd28d-downloader17f&ts=5a66deb20e180&s=8121624591afbfdca66e243438cac9129e8a1d08d3a318a7b719a69742351428&pb=U2FsdGVkX1_nURZkgGO6KfYEl6px7bPpvTBfI_OIQGPPbaQt7olfxZNcbXGvw8pg0el5U2JhZzbO6UUgYS-ezhDID1Yyh4zNoil66mujDmA)
 **Рисунок 1.1.1** архитектура стека Bluetooth протоколов
 
 Чем ниже протокол - тем ближе он расположен к физическому уровню. Самые нижние уровни реализованы на контроллерах Bluetooth. Эти чипы взаимодействуют с ОС через интерфейс контроллера (**HCI**). Все протоколы выше **HCI** (например *L2CAP*, *SMP*, *SDP*) реализованы на уровне ОС и входят в отдельный стек Bluetooth конкретной ОС (иногда туда может входить и **HCI**). Профили на рисунке 1.1.1 представлены белым цветом и могут использовать часть стека протоколов для своих целей. Так как каждая ОС использует только собственный стек протоколов Bluetooth, то любая уязвимость, найденная в этом стеке затрагивает все устройства с этой ОС. Например, Linux и ранние версии Android используют стек *BlueZ*. Начиная с версии 4.2 Android использует свой собственный стек *Bluedroid*.
 
 **BlueBorne** представляет собой несколько уязвимостей разных ОС на отдельных уровнях иерархии Bluetooth. В своем докладе я затрагиваю уязвимости Android и Linux (так как *BlueZ* ранее использовался в Android). На рисунке 1.1.2 показаны уровни, на которых обнаружены данные уязвимости.
 
-![](https://s172i.storage.yandex.net/rdisk/05ad1ce0b74c4274a2e32bdd30f48b54aa190e9650041d7267617f248a7158af/5eb85713/VjhUqhsAETQC8mIPmDmVvSVe9WY5_j_kRagJoJ8NNGMqtSBNjfxEEXoNbYu-sAXjOu56ky8T7tmtNhLFSuuKsA==?uid=1040559485&filename=image--013.jpg&disposition=inline&hash=&limit=0&content_type=image%2Fjpeg&tknv=v2&owner_uid=1040559485&fsize=112968&hid=e954b81d4140c54053a026302e433d39&etag=6432896b8aa4b7b82fc66ba09f40eacc&media_type=image&rtoken=ENNuB1zDTHCj&force_default=yes&ycrid=na-cc857b24fee1f7c86b44cc4528fd1b25-downloader18f&ts=5a5504ea5aac0&s=e52b64da1e5f7205be82446401bd4e107ebc1fae7d4c843cf2af1097f499bc18&pb=U2FsdGVkX19ZZOHpwZsIA-X_2KnPb3jW_y04TIdMKKfmEP-SjN_Sc_qJjQjVNpRwR5C3ToiFjfVT17q4623pTa6uycX56ghkWg8OxzV0S_E)
+![](https://s58vla.storage.yandex.net/rdisk/91f7720958f3e9ecc789f14d36fc6d4ab1942f5fb14ca6af181a0b71f7b15147/5ecb0f06/VjhUqhsAETQC8mIPmDmVvSVe9WY5_j_kRagJoJ8NNGMqtSBNjfxEEXoNbYu-sAXjOu56ky8T7tmtNhLFSuuKsA==?uid=1040559485&filename=image--013.jpg&disposition=inline&hash=&limit=0&content_type=image%2Fjpeg&tknv=v2&owner_uid=1040559485&fsize=112968&media_type=image&etag=6432896b8aa4b7b82fc66ba09f40eacc&hid=e954b81d4140c54053a026302e433d39&rtoken=nPq0UdEeUiwM&force_default=yes&ycrid=na-d218b143c44296efaefdebc603799bda-downloader3h&ts=5a66dedee0b40&s=727c960f944ea3042ee6d3e475681c9640bd9c45c1ac5ac1618835eeb668310c&pb=U2FsdGVkX1886wvzeWy6edif87sfimlD9cDe0tEHFMWZ6hlhRlkwCnNqX0iSB8JPPgEYlVFGnLuG5Za3CHbrBhh1rZWtGuxbguc7lUA__qo)
 **Рисунок 1.1.2** уровни стека Bluetooth, в которых найдены уязвимости
 
 Кратко о каждом затронутом уровне:
@@ -31,7 +31,7 @@ TODO: types of vulnerabilities, popular vulnerabilities, impact on android
 --------------------------------
 Пользовательское приложение использует Bluetooth процесс через *Binder* (специальную службу в Android, обеспечивающую межпроцессное взаимодействие). Java Native Interface (**JNI** - вызов кода на C/C++ из Java) используется Bluetooth процессом для взаимодействия с низкоуревневым Bluetooth стеком. Рисунок 1 объясняет реализацию Bluetooth в Android.
 
-![](https://s09sas.storage.yandex.net/rdisk/fadfe8afdc50881366f5546b9a6a964cacac14000f931503c9d71ef8aa1cf02c/5eb82a4e/VjhUqhsAETQC8mIPmDmVvSsGxaJTp7BGKDTbHC4TO4leCCHblS7Qn-YXyBLZdnhnOFlHAWMwaie0JAfQA6WFBQ==?uid=1040559485&filename=ape_fwk_bluetooth.png&disposition=inline&hash=&limit=0&content_type=image%2Fpng&tknv=v2&owner_uid=1040559485&media_type=image&etag=bb84bb573d3272eb0df245ddbc577700&fsize=40617&hid=f9a1d84542715f3826d6e1403a4ebc9b&rtoken=XNkjP4EiD0zY&force_default=yes&ycrid=na-313dd79bc5ac172a0d535744f6eb6626-downloader1f&ts=5a54da384af80&s=43db5e9ce00f56fb45e5890388711a7a40705a98c9a45cce792d8a0ace8de97a&pb=U2FsdGVkX18Y5U8jILJrM3FKBtjpKzpHodyIVUm9s4yeWe20pyWP9_87M2vW62eMiw7c4Rsna6SyOONQpbWrngDkwLb3kmfKywWn6ubcwNo)
+![](https://s313man.storage.yandex.net/rdisk/8cfee0eb4ff8daafa3d1fe98a8a11ffbe4a0ff7370490391d4910e9295ecbd26/5ecb0eb4/VjhUqhsAETQC8mIPmDmVvSsGxaJTp7BGKDTbHC4TO4leCCHblS7Qn-YXyBLZdnhnOFlHAWMwaie0JAfQA6WFBQ==?uid=0&filename=ape_fwk_bluetooth.png&disposition=inline&hash=&limit=0&content_type=image%2Fpng&tknv=v2&owner_uid=1040559485&media_type=image&fsize=40617&etag=bb84bb573d3272eb0df245ddbc577700&hid=f9a1d84542715f3826d6e1403a4ebc9b&rtoken=P6XzP6h60Nyu&force_default=no&ycrid=na-23857bf31e92759e5b5fe815f51ea3f0-downloader17f&ts=5a66de91a1500&s=384bcbdb59fd4e2107ee5c4b4761894d278ee56186dcdd7c546e320900deec64&pb=U2FsdGVkX19_z5Gj996hyBRg0io6qw6eyAR_TtrRYW6haYX0DcbC_lUrY7J5oADU5UNyLuFNG-SarHeXkdOxj3t3g4ERhUOgV-letePQYb0)
 
 ***Рисунок 1.2.1*** архитектура Bluetooth стека в Android
      
@@ -53,7 +53,7 @@ TODO: types of vulnerabilities, popular vulnerabilities, impact on android
 ### Процесс обмена конфигурациями
 
 В документации Bluetooth запросы и ответы конфигурации обозначены как **L2CAP_ConfReq** и **L2CAP_ConfResp** сообщения. Начальный обмен этими сообщениями между конечными точками называется **инициализирующим рукопожатием**. *L2CAP_ConfResp* содержит статус-код, который информирует отправителя о том, приняты ли его параметры конфигурации, или в этом отказано. 
-![](https://s426sas.storage.yandex.net/rdisk/7ba712398f35527520cf58e60a6a382bf88d951b8cd07ad0fe6826a846303493/5eb9478f/VjhUqhsAETQC8mIPmDmVvSyhKRGbhB5iP6-Vw5bQ7hnQLdPFg_SR_W3tLW7L1znlpRccNWJUJhPkSejmCSMxSA==?uid=1040559485&filename=image--017.jpg&disposition=inline&hash=&limit=0&content_type=image%2Fjpeg&tknv=v2&owner_uid=1040559485&media_type=image&etag=a9eff1fa0e3b223ff82729fa892595ff&fsize=83232&hid=7b142acf5260421972b0b442be49b52c&rtoken=duONR8jL8QxC&force_default=yes&ycrid=na-ab47018f1d12713e46066aa1de4d1d27-downloader12h&ts=5a55ea4167f80&s=775d4364d6d747aca4be109a04e712e5133f0b577db220b0571c26beddff28d2&pb=U2FsdGVkX1-vkxxJSI8N8IOLbE9Pf3tvA--6-LLx1rCDdvFtKsZ55TDwkOyViBA_4R_Pgu47gdzRou2U9st_Wn4NFYhARDiGDwu1xSyFFwM)
+![](https://s426sas.storage.yandex.net/rdisk/145c9c9b5bd4646a74e40def7dd1b7db52f0519926a18027d4b6d7dd5b3edfa7/5ecb0f6a/VjhUqhsAETQC8mIPmDmVvSyhKRGbhB5iP6-Vw5bQ7hnQLdPFg_SR_W3tLW7L1znlpRccNWJUJhPkSejmCSMxSA==?uid=1040559485&filename=image--017.jpg&disposition=inline&hash=&limit=0&content_type=image%2Fjpeg&tknv=v2&owner_uid=1040559485&fsize=83232&etag=a9eff1fa0e3b223ff82729fa892595ff&hid=7b142acf5260421972b0b442be49b52c&media_type=image&rtoken=4DE60t6AwB4m&force_default=yes&ycrid=na-b33eae45a796ad319003dec5b2ea6f2f-downloader17f&ts=5a66df3e3ec40&s=819c7b8dc84fa2b01fdf14b7463666da2be1a0d5a7bbe15e4460764203f2c0b3&pb=U2FsdGVkX18DS_ffJxVM_fIFC25Y2XvXj9Wj1SQ3FeXHeE-WhBgAKkzT4tePa5RfhXvraDQNiMMjIghVdzgfK85uZb6JShWB5gi8UTv7l5I)
 **Рисунок 2.1.1** типичный процесс обмена конфигурацией. В данном примере две конечные точки обмениваются информацией об **MTU** (максимальный размер полезного блока данных одного пакета). Остальные параметры выставлены по умолчанию.
 
 Рисунок 2.1.1 иллюстрирует процесс обмена конфигурациями. Девайс **А** запрашивает **MTU** как параметр (*option = 0x01*) и его величину *0x100*, которую девайс **B** принимает и затем запрашивает величину **MTU** как *0x200*, которую девайс **A** также принимает. Таким образом, максимальная величина сообщения, которое устройство **А** может послать устройству **B** составляет *0x100* и обратно от **B** к **A** *0x200*. 
@@ -173,9 +173,9 @@ int main(int argc, char *argv[]) {
 }
 ```
 При передаче в ***argv[1]*** строки, превышающего по длине размер массива ***buf***, произойдет переполнение буфера, как показано на рисунках 2.1.2 и 2.1.3, так как функция **strcpy** не проверяет размер переданной ей строки. 
-![](https://s04vla.storage.yandex.net/rdisk/189f9814f40388fe83efd36d024e9048be3889cf564be8414219087d9bd91d5c/5eb992e1/IkFTLqauHgYU-Cdk6fB83NuXuDR_mUJM1xg80h0saK-eZa2DiUBWdIjtnE4oxYqdEsNlP5S2Y4efLJxj-B_cnw==?uid=1040559485&filename=Stack_Overflow_2.png&disposition=inline&hash=&limit=0&content_type=image%2Fpng&tknv=v2&owner_uid=1040559485&fsize=39254&hid=8d9976c57c7bb5fe0e56348d7382bb67&etag=4ef6720136b3fd87f130320aa644e6c1&media_type=image&rtoken=OjHRDAAvXvx5&force_default=yes&ycrid=na-e6191c72d8c53a41df4c3333c8950799-downloader16f&ts=5a56321627800&s=47b0fb6dcf4cf1b28cdbccac61d09547e1caaca0c0522169bc7c410fa9f6b34a&pb=U2FsdGVkX1-mt9M5mwbLzcu-rKSSgUNQOO3lkVbDSg_ulz4rnnkyYwDxHAevI_GO7NWOunY7oGE80Mhx-Sf-tHymzY66F517Z99kjz3Eue8)
+![](https://s87myt.storage.yandex.net/rdisk/0b335cb53225296e5874311b9047489d8ef810a3e24f874b2af78b7f403e877b/5ecb0f9a/IkFTLqauHgYU-Cdk6fB83NuXuDR_mUJM1xg80h0saK-eZa2DiUBWdIjtnE4oxYqdEsNlP5S2Y4efLJxj-B_cnw==?uid=1040559485&filename=Stack_Overflow_2.png&disposition=inline&hash=&limit=0&content_type=image%2Fpng&tknv=v2&owner_uid=1040559485&media_type=image&hid=8d9976c57c7bb5fe0e56348d7382bb67&etag=4ef6720136b3fd87f130320aa644e6c1&fsize=39254&rtoken=gBL5cjoHjJgX&force_default=yes&ycrid=na-13dd3e1f1bd1a70aba0dc4e1ee0c0f6b-downloader17f&ts=5a66df6c05840&s=19eedd459bac2007ce816214e9f8e2ff13449a923d71e37b7cbb29ce8232e594&pb=U2FsdGVkX19QVH3L72wqsdBzAfFpjVa-caUj2Wew-m7avmgR4QpEv0VxoN-IbJUJX-XwCS7S8Zhej2nmgDWx0n8TpZNF9NJo6gVVJ9Hrbso)
 **Рисунок 2.1.2** до копирования
-![](https://s624sas.storage.yandex.net/rdisk/bd5eb1291454069469f3facbafa7bf9e65599f3f8fdaa63fd3ac3b173cb781ef/5eb9938b/IkFTLqauHgYU-Cdk6fB83DbTa9cOE3YFLBQeo1y50Exj3m2jXN5WAOq1ueHn60STO2uiSDGALMB6_HmX9FkDBw==?uid=1040559485&filename=Stack_Overflow_4.png&disposition=inline&hash=&limit=0&content_type=image%2Fpng&tknv=v2&owner_uid=1040559485&etag=33535dd06eb993dc7de54894d1e1af59&hid=6abb0689bd418d7dedede9d50c7ad4b3&fsize=42327&media_type=image&rtoken=Js8RM83e9xKh&force_default=yes&ycrid=na-a740bd7f601e12046b798ae86c41430c-downloader16f&ts=5a5632b93b8c0&s=a48c70d8f7ff35fc4b140ea968be6258e8ce1d4857347359200505ae53fc1970&pb=U2FsdGVkX1-AWL4uTrCDJAIc-VVNM52WtSmA3CGMN1MKRwg7n6Rz4SEZ1IzaNIyJlcfq9BuoFgzUbNJ5z_u-7tdXRUBapQzUTJ_7XcOWdYI)
+![](https://s610sas.storage.yandex.net/rdisk/cfe38025005d54ba01927309fcdb5f02e13a05f17dcbc08e8f0da2b12fc05f04/5ecb0fab/IkFTLqauHgYU-Cdk6fB83DbTa9cOE3YFLBQeo1y50Exj3m2jXN5WAOq1ueHn60STO2uiSDGALMB6_HmX9FkDBw==?uid=1040559485&filename=Stack_Overflow_4.png&disposition=inline&hash=&limit=0&content_type=image%2Fpng&tknv=v2&owner_uid=1040559485&media_type=image&etag=33535dd06eb993dc7de54894d1e1af59&fsize=42327&hid=6abb0689bd418d7dedede9d50c7ad4b3&rtoken=cpTgr3kWGtiu&force_default=yes&ycrid=na-13f19702116788c23efae09c55fb90d5-downloader17f&ts=5a66df7c3be80&s=d04591601a53431b6eab739cce20a58727895df1557a648defd4e529b69103c1&pb=U2FsdGVkX19yIK6vN13uu7slcTG4gf2FSG9YVzOrCM0J-k47-mtRcPz0G3n9OBbG67gD8aNEMIa5Xb-kGpezC-kaLYbIJuEg8rzsZPUf0OY)
 **Рисунок 2.1.2** после копирования
 Так как в архитектуре x86 стек растёт от больших адресов к меньшим, то, записывая данные в буфер, можно осуществить запись за его границами и изменить находящиеся там данные, в частности, изменить адрес возврата.
 Таким образом, атакующая сторона может:
@@ -246,7 +246,7 @@ send(sock, buf, L2CAP_CMD_HDR_SIZE + 4, 0)
 TODO: code + conclusions
 #### Выводы
 
-В случае с BlueZ, уровень **L2CAP** включен в ядро Linux. Это решение не самое удачное в силу таких механизмов как **EFS**, потому что внедренный вредоносный код будет иметь наибольшие привилегии, что может привести к разрушительным последствиям. Это дает надежный эксплойт для атакующей стороны, требуется только включенный Bluetooth и знание MAC-адреса жертвы.
+В случае с BlueZ, уровень **L2CAP** включен в ядро Linux. Это решение не самое удачное в силу таких механизмов как **EFS**, потому что внедренный вредоносный код будет иметь наибольшие привилегии, что может привести к разрушительным последствиям. Это дает надежный эксплойт для атакующей стороны, требуется только включенный Bluetooth и информация о MAC-адресе жертвы.
 
 # 2.2 SDP и уязвимости Bluetooth стеков  Linux и Android (CVE-2017-1000250 и CVE-2017-0785) 
 --------------------------------------
@@ -267,7 +267,7 @@ TODO: code + conclusions
 Данная уязвимость возникает из-за ошибки в реализации механизма фрагментации протокола **SDP**. BlueZ определяет **continuation-state** как:
 ```c++
 typedef struct {
-    // может послужить утечкой
+    // может также послужить утечкой
     // о времени на конкретном устройстве
     uint32_t timestamp; 
     union {
@@ -280,7 +280,7 @@ typedef struct {
 ```
 Структура **continuation-state** из исходного кода BlueZ (src/sdpd-request.c)
 
-Так как *SDP клиент* постоянно должен вставлять эту структуру перед тем, как хочет получить очередной фрагмент ответа, он может подменить поле **lastIndexSent**, что может повлечь за собой чтение данных, находящихся за пределами буфера, в котором хранится *SDP-ответ*, что показано в обработчике запроса приведенном далее:
+Так как *SDP клиент* постоянно должен вставлять эту структуру перед тем, как хочет получить очередной фрагмент ответа, он может подменить поле **lastIndexSent**, что может повлечь за собой чтение данных, находящихся за пределами буфера, в котором хранится *SDP-ответ*, что следует из обработчика запроса, приведенного далее:
 ```c++
 ...
     } else {
@@ -292,14 +292,16 @@ typedef struct {
             uint16_t sent = MIN(max, pCache->data_size -
 cstate->cStateValue.maxBytesSent);
             pResponse = pCache->data;
-            // 
+            //копируются данные, находящиеся в ответе
             memcpy(buf->data, pResponse + cstate->cStateValue.maxBytesSent, sent);
             buf->data_size += sent;
             cstate->cStateValue.maxBytesSent += sent;
-            // 
+            //если отправили все фрагменты пакета
             if (cstate->cStateValue.maxBytesSent == pCache->data_size)
+                //размер выставляется в нуль
                 cstate_size = sdp_set_cstate_pdu(buf, NULL);
             else
+                //размер выставляется такой же как и у cstate
                 cstate_size = sdp_set_cstate_pdu(buf, cstate);
         } else {
             status = SDP_INVALID_CSTATE;
@@ -307,10 +309,11 @@ cstate->cStateValue.maxBytesSent);
         }
     }
 ...
-
 ```
-Выдержка из функциз service_search_attr_req из исходного кода BlueZ (src/sdpd-request.c)
+Выдержка из функции service_search_attr_req исходного кода *SDP-сервера* BlueZ (src/sdpd-request.c)
 
-На данном участке кода *SDP сервер* 
+На данном участке кода *SDP сервер* некорректно проверяет поле **maxBytesSent** из структуры **continuation-state** (переменная *cstate*), что позволяет вышестоящему вызову функции **memcpy** скопировать данные, находящиеся за пределами буфера *pResponse*. Атакующей стороне остается лишь обойти этот некорректный **if(...)**, который проверяет, что все данные были отправлены. Этого легко достичь, так как клиент имеет доступ к полю **maxBytesSent** структуры **continuation-state**.
 
+BlueZ стек разбит на две части, одна из которых работает на *уровне ядра* (отрывок был рассмотрен в уязвимости **L2CAP**), вторая - на *пользовательском уровне*. Процесс *bluetoothd* как раз содержит последнюю часть и контролирует критически важные данные (например ключи шифрования Bluetooth-соединений), которые могут быть получены при эксплуатации данной уязвимости. Данная утечка очень напоминает **Heartbleed (CVE-2014-0160)** - ошибку в криптографическом программном обеспечении *OpenSSL*, позволяющую несанкционированно читать память на сервере или на клиенте, в том числе для извлечения закрытого ключа сервера.
 
+#### Эксплуатация уязвимости CVE-2017-1000250
