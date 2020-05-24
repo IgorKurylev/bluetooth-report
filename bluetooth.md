@@ -402,8 +402,11 @@ while offset > 0:
     data = sock.recv(mtu)
     data = data[7:] # убираем SDP параметры
     data = data[:-9] # убираем continuation state
+    # сохраняем полученные данные 
     received_data = data + received_data
+    # двигаем смещение
     offset -= len(data) if len(data) > 0 else 1
 
 print(hexdump(received_data))
 ```
+Полученные байты хранятся в массиве *received_data*
