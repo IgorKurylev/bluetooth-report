@@ -887,9 +887,47 @@ switch (control_type)
     break;
 }
 ...
-
 ```
 Фрагмент исходного кода функции-обработчика контрольных пакетов *bnep_process_control_packet*
 
 Данная функция учитывает все контрольные сообщения протокола **BNEP** и заголовки расширений, чтобы обработать вложенные сообщения. Документация **BNEP** позволяет игнорировать неопознанные типы расширений, что показано в ветке default вышеприведеннного фрагмента исходного кода, смещая указатель на длину расширения.
+
+Переменная *rem_len* имеет тип 16-битного unsigned short и равна величине оставшихся необработанных байтов полученного пакета. *ext_len* - 8-битный unsigned и является частью заголовка расширения, который также контролируется атакующей стороной. Таким образом, *rem_len* может быть переполнен до любого значения больше *0xff00*, дальнейшая обработка пакета будет небезопасной, так как зависит от *rem_len*.  
+
+Например, если *rem_len* равна *10* и атакующая сторона устанавливает *rem_len* в *12*, значение *rem_len* будет:
+```c++
+rem_len -= (12 - 1) ⇔ rem_len -= 11 ⇔ rem_len == 10 - 11 == 0xffff
+```
+
+В функции **bnep_data_ind** после вызова **bnep_process_control_packet**:
+```c++
+...
+while (extension_present && p && rem_len)
+{
+    ext_type = *p;
+    extension_present = ext_type >> 7;
+    ext_type &= 0x7F;
+    // если расширение неизвестно, останавливаем обработку сообщения
+    if (ext_type)
+    {
+        ...
+        break;
+    }
+    p++;
+    rem_len--;
+    p = bnep_process_control_packet (p_bcb, p, &rem_len, TRUE);
+}
+
+p_buf->offset += p_buf->len - rem_len;
+p_buf->len = rem_len;
+...
+else if (bnep_cb.p_data_ind_cb)
+{
+    (*bnep_cb.p_data_ind_cb)(p_bcb->handle, p_src_addr, p_dst_addr,
+protocol, p, rem_len, fw_ext_present);
+    osi_free(p_buf);
+}
+```
+Фрагмент исходного кода функции **bnep_data_ind**
+
 
