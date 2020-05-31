@@ -1076,4 +1076,6 @@ Attack) атака может обходить процесс Bluetooth ауте
  7) **Andrew S. Tanenbaum Computer Networks 5th Edition**
  
 8) **Linux Kernel Networking: Implementation and Theory**
+
+9) **BlueBorne: One Year Later** - https://www.armis.com/resources/iot-security-blog/blueborne-one-year-later/
  
